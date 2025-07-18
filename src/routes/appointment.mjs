@@ -15,6 +15,8 @@ try {
     const { name ,email, message, diagnosis,date,phone,doctorId} = request.body;
     console.log(name)
     const doctor = await Doctor.findById(doctorId);
+      
+
     if (!doctor || !doctor.email) {
       return response.status(404).send({ msg: "Doctor not found or missing email." });
     }
@@ -82,9 +84,8 @@ html: `<h3>New Appointment Notification</h3>
         
 
 
-    const newAppointment=new Appointment(body)
+    const newAppointment=new Appointment( {...body, user: request.user?._id || undefined})
     console.log('creating appointment',newAppointment)
-
     const savedAppointment=await newAppointment.save()
 console.log("User saved:", savedAppointment)
 return response.status(201).send({msg:"Appointment created successfully", appointment: savedAppointment})

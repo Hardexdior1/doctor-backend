@@ -14,8 +14,10 @@ const doctorSchema = new mongoose.Schema({
     type: String, 
     maxlength: 200 
   },
-
-  // Contact
+isDemo:{
+type:Boolean,
+default:false,
+},
   email: { 
     type: String, 
     unique: true,
@@ -32,7 +34,8 @@ const doctorSchema = new mongoose.Schema({
   // Image (Stored as URL or file path)
   image: { 
     type: String,
-    default: "/doc-1.jpg.webp" // Placeholder if no image uploaded
+    // default: "/doc-1.jpg.webp", // Placeholder if no image uploaded
+    required:true,
   },
 
   // Availability

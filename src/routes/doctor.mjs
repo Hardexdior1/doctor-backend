@@ -1,8 +1,9 @@
 import { Doctor } from "../mongoose/schema/doctorShema.js";
-import {  Router } from "express";
 import { Appointment } from "../mongoose/schema/appointmentSchema.js";
 import { Review } from "../mongoose/schema/reviewSchema.js";
 import upload from "../cloudinary/cloudinary.js"
+import { Router } from "express";
+import nodemailer from 'nodemailer';
 
 const router=Router()
 
@@ -13,7 +14,70 @@ router.get('/api/test2',async(request,response)=>{
       });
       
 })
+router.post('/api/create-appointment',async(request,response)=>{
+const {body}=request
 
+
+try {
+    const { name ,email, message, diagnosis,date,phone,doctorId} = request.body;
+    console.log(name)
+    const doctor = await Doctor.findById(doctorId);
+      
+
+    if (!doctor || !doctor.email) {
+      return response.status(404).send({ msg: "Doctor not found or missing email." });
+    }
+  const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "adeniranquwam001@gmail.com",
+                pass: `${process.env.GmailPassword}`
+            }
+        });
+
+        // automatic message that would be sent to the appointed doctor
+        const mailDoctor= {
+            from: 'Medicare <no-reply@medicare.com>',
+            to: doctor.email,
+            replyTo: email,
+            subject: `New appointment booked with you,  ${doctor.name}`,
+html: `<h3>New Appointment Notification</h3>
+       <p><strong>Dear  ${doctor.name},</strong></p>
+       <p>You have a new appointment booked through Medicare.</p>
+       <p><strong>Patient Details:</strong></p>
+       <ul>
+         <li><strong>Name:</strong> ${name}</li>
+         <li><strong>Email:</strong> ${email}</li>
+         <li><strong>Phone:</strong> ${phone}</li>
+         <li><strong>Diagnosis:</strong> ${diagnosis}</li>
+         <li><strong>Date:</strong> ${date}</li>
+       </ul>
+       <p><strong>Message from the patient:</strong></p>
+       <p>${message.replace(/\n/g, '<br>')}</p>
+       <hr>
+       <p>This is an automated message from Medicare. Please log in to your dashboard to view or manage this appointment.</p>`
+        };
+
+       
+
+
+
+        await Promise.all([
+            transporter.sendMail(mailDoctor),
+        ]);
+        
+
+
+    const newAppointment=new Appointment( {...body, user: request.user?._id || undefined})
+    console.log('creating appointment',newAppointment)
+    const savedAppointment=await newAppointment.save()
+console.log("User saved:", savedAppointment)
+return response.status(201).send({msg:"Appointment created successfully", appointment: savedAppointment})
+
+} catch (error) {
+    return response.status(400).send({ msg: "Error creating appointment", error: error.message });
+}
+})
 // create doctor
 router.post('/api/create-doctor',upload.single('image'),async(request,response)=>{
 const {body}=request
@@ -31,8 +95,50 @@ try {
 
 
     const createdDoctor= await newDoctor.save()
-    console.log("doctor created succesfully",createdDoctor)
+    
 
+       
+
+
+
+       
+    console.log("doctor created succesfully",createdDoctor)
+ const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "adeniranquwam001@gmail.com",
+                pass: `${process.env.GmailPassword}`
+            }
+        });
+
+        // automatic message that would be sent to the appointed doctor
+       const mailDoctor = {
+  from: 'Mediplus <no-reply@medicare.com>',
+  to: createdDoctor.email,
+  subject: `Welcome to Mediplus, Dr. ${createdDoctor.name}! Your profile is live.`,
+  html: `
+    <h3>🎉 Your Mediplus Profile is Now Live!</h3>
+    <p><strong>Dear Dr. ${createdDoctor.name},</strong></p>
+
+    <p>We’re excited to let you know that your <strong>${createdDoctor.specialty}</strong> profile has been successfully created on <strong>Mediplus</strong>.</p>
+
+    <p>Patients can now find your profile and book appointments with you directly on our platform.</p>
+
+    <h4>🔔 What You Should Know:</h4>
+    <ul>
+      <li>If you’re unavailable at any time, kindly inform the admin so your profile can be temporarily hidden from booking.</li>
+    </ul>
+
+    <p>If you have any questions or need to update your details, feel free to contact the admin.</p>
+
+    <hr>
+    <p style="color:#777;">This is an automated message from Mediplus. Please do not reply directly to this email.</p>
+  `
+};
+
+         await Promise.all([
+            transporter.sendMail(mailDoctor),
+        ]);
     return response.status(201).send(createdDoctor)
     
 } catch (error) {
@@ -193,6 +299,36 @@ router.patch('/api/edit-doctor/:doctorId',upload.single('image'),async(request,r
         return response.status(500).send({ msg: error.message });
     }
 });
+
+
+
+// DELETE doctor by ID
+router.delete('/api/delete-doctor/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if ID is valid MongoDB ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid doctor ID format' });
+    }
+
+    const doctor = await Doctor.findById(id);
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+     if (doctor.isDemo) {
+      return res.status(403).json({ message: "You can't delete a demo doctor" });
+    }
+    const deletedDoctor = await Doctor.findByIdAndDelete(id);
+
+    res.status(200).json({ message: 'Doctor deleted successfully', doctor: deletedDoctor });
+  } catch (error) {
+    console.error('Error deleting doctor:', error);
+    res.status(500).json({ message: 'Server error while deleting doctor' });
+  }
+});
+
 
 
 export default router

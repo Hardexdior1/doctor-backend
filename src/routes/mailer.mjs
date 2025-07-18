@@ -12,7 +12,7 @@ router.post("/api/contact", upload.single("attachment"), async (request, respons
         const { name, phone, message,email } = request.body;
         const attachment = request.file; // Get the uploaded file from multer
 
-        if (!name || !email || !message||!phone) {
+        if (!phone) {
             return response.status(400).send({ error: 'All fields are required' });
         }
 
@@ -55,7 +55,7 @@ router.post("/api/contact", upload.single("attachment"), async (request, respons
             fs.unlinkSync(attachment.path);
         }
 
-        return response.send({ success: true, message: 'Message sent successfully' });
+        return response.send({ message: 'Message sent successfully' });
 
     } catch (error) {
         console.error('Email error:', error);

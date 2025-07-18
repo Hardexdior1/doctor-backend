@@ -13,6 +13,10 @@ const appointmentSchema=new mongoose.Schema(
         type:String,
         required:true,
     },
+    phone:{
+      type:String,
+      required:false,
+    },
    email:{
     type:String,
     required:true,
@@ -22,7 +26,7 @@ const appointmentSchema=new mongoose.Schema(
    },
    diagnosis:{
     type:String,
-    required:true,
+    required:false,
    },
    
    doctorId: { 
@@ -31,7 +35,7 @@ const appointmentSchema=new mongoose.Schema(
     required: true 
 
   },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
 }
 )

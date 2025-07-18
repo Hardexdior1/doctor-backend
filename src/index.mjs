@@ -35,8 +35,15 @@ const connectDB = async () => {
 }
 
 // ✅ CORS Middleware
+const allowedOrigins=['https://medipluss-fullstack.netlify.app/', 'http://localhost:3000']
 app.use(cors({
-  origin: "http://localhost:3000",
+   origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -129,7 +136,8 @@ app.get('/api/auth/status', async (request, response) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 5000
+console.log(PORT)
 const startServer = async () => {
   await connectDB()
   app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
