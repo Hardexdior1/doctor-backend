@@ -179,9 +179,11 @@ router.get('/api/user-past-doctors',async(request,response)=>{
 })
 // get appointment under a user
 router.get('/api/user-past-appointment',async(request,response)=>{
-    const userId=request.user._id
+//   if (!request.user) {
+//     return response.status(401).send({ message: "not authenticated" })
+//   }
     try {
-        const pastappointment=await Appointment.find({user:userId}).populate('doctorId')
+        const pastappointment=await Appointment.find({user:request.user._id}).populate('doctorId')
         if (!pastappointment) return response.status(404).json({ msg: 'appointment not found' });
         response.status(200).send(pastappointment); 
         
@@ -190,7 +192,22 @@ router.get('/api/user-past-appointment',async(request,response)=>{
         
     }
 })
+// test session
+router.get('/api/test-session', (request, response) => {
+ if (!request.user) {
+    return response.status(401).send({ message: "not authenticated" })
+  }
 
+  try {
+    response.status(200).send({
+      msg: "valid user",
+      user: request.user,
+      session:request.session
+    })
+  } catch (error) {
+    return response.status(500).send(error.message)
+  }
+});
 //   logout
 router.post('/api/logout', (request, response) => {
     request.logout((error) => {

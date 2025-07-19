@@ -34,27 +34,33 @@ const connectDB = async () => {
   }
 }
 
-// ✅ CORS Middleware
-const allowedOrigins=['https://medipluss-fullstack.netlify.app/', 'http://localhost:3000']
+const allowedOrigins = [
+  'https://medipluss-fullstack.netlify.app',
+  'http://localhost:3000'
+];
+app.use(express.json())
+app.use(cookieParser('hello world'))
+
+
 app.use(cors({
-   origin: function (origin, callback) {
+  origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error("❌ CORS Blocked Origin:", origin); 
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
-}))
+}));
 
-app.use(express.json())
-app.use(cookieParser('hello world'))
+
 
 // ✅ Session Middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: 'quwam_the_dev',
   saveUninitialized: false,
   resave: false,
   store: MongoStore.create({
@@ -62,17 +68,18 @@ app.use(session({
     dbName: 'doctor',
     collectionName: "sessions",
   }),
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax"
-  }
+ cookie: {
+  maxAge: 1000 * 60 * 60 * 24, // 1 day
+  httpOnly: true,
+  secure: false, 
+  sameSite: "none" 
+}
 }))
 
 // ✅ Passport Middleware
-app.use(passport.session())
 app.use(passport.initialize())
+app.use(passport.session())
+
 
 // ✅ Routers
 app.use(mailerRouter)
@@ -102,6 +109,7 @@ app.post('/api/auth/login', (request, response, next) => {
     })
   })(request, response, next)
 })
+
 
 // ✅ Check Auth Status
 app.get('/api/auth/status', async (request, response) => {
@@ -136,10 +144,10 @@ app.get('/api/auth/status', async (request, response) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT 
 console.log(PORT)
 const startServer = async () => {
   await connectDB()
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}, ${process.env.SESSION_SECRET}`))
 }
 startServer()
