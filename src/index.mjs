@@ -36,12 +36,9 @@ const connectDB = async () => {
 
 const allowedOrigins = [
   'https://medipluss-fullstack.netlify.app',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://quwamportfolio.netlify.app',
-
-
-
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://quwamportfolio.netlify.app',
 ];
 
 app.use(express.json())
