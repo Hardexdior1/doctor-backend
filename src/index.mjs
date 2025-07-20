@@ -36,14 +36,21 @@ const connectDB = async () => {
 
 const allowedOrigins = [
   'https://medipluss-fullstack.netlify.app',
-  'http://localhost:3000'
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://quwamportfolio.netlify.app',
+
+
+
 ];
+
 app.use(express.json())
 app.use(cookieParser('hello world'))
 
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log("Request Origin:", origin); // Debug log
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -57,6 +64,17 @@ app.use(cors({
 }));
 
 
+app.options('*', cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
 
 // ✅ Session Middleware
 app.use(session({
@@ -68,12 +86,15 @@ app.use(session({
     dbName: 'doctor',
     collectionName: "sessions",
   }),
- cookie: {
-  maxAge: 1000 * 60 * 60 * 24, // 1 day
+
+cookie: {
   httpOnly: true,
-  secure: false, 
-  sameSite: "none" 
+  secure: process.env.NODE_ENV === "production", // true on Render/live
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // allow cross-origin only in prod
+  maxAge: 24 * 60 * 60 * 1000 // 1 day
 }
+
+
 }))
 
 // ✅ Passport Middleware
@@ -144,7 +165,9 @@ app.get('/api/auth/status', async (request, response) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT 
+// const PORT = process.env.PORT 
+const PORT = process.env.PORT || 5000;
+
 console.log(PORT)
 const startServer = async () => {
   await connectDB()

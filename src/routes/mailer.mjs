@@ -30,7 +30,7 @@ router.post("/api/contact", upload.single("attachment"), async (request, respons
             to: "adeniranquwam001@gmail.com",
             replyTo: email,
             subject: `New message from ${name}`,
-            html: `<h3>New message from your website</h3>
+            html: `<h3>New message from mediplus</h3>
                  <p><strong>From:</strong> ${name} (${email})</p>
                 <p><strong>Phone:</strong> ${phone}</p>
 
@@ -72,4 +72,48 @@ router.post("/api/contact", upload.single("attachment"), async (request, respons
     }
 });
 
+router.post("/api/contact-for-my-portfolio", async (request, response) => {
+    try {
+        const { name,  message,email } = request.body;
+
+       
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "adeniranquwam001@gmail.com",
+                pass: `${process.env.GmailPassword}`
+
+            }
+        });
+
+        const mailOptions = {
+            from: email,
+            to: "adeniranquwam001@gmail.com",
+            replyTo: email,
+            subject: `New message from ${name}`,
+            html: `<h3>New message from your your portfolio </h3>
+                 <p><strong>From:</strong> ${name} (${email})</p>
+
+                 <p><strong>Message:</strong></p>
+                 <p>${message.replace(/\n/g, '<br>')}</p>`,
+        };
+
+       
+
+        await transporter.sendMail(mailOptions);
+      
+
+        return response.send({ message: 'Message sent successfully' });
+
+    } catch (error) {
+        console.error('Email error:', error);
+       
+        
+        response.status(500).json({ 
+            error: 'Failed to send message',
+            details: error.message // Better to send just the message
+        });
+    }
+});
 export default router;
