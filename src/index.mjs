@@ -1,5 +1,5 @@
 
-import express from 'express'
+import express, { response } from 'express'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
@@ -88,7 +88,8 @@ cookie: {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production", 
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
-  maxAge: 24 * 60 * 60 * 1000 // 1 day
+  maxAge: 24 * 60 * 60 * 1000 ,
+  path:'/', 
 }
 
 
@@ -108,14 +109,18 @@ app.use(userRouter)
 
 
 
-// ✅ Log Session & Cookies
+//  Log Session & Cookies
 app.use((req, res, next) => {
   console.log('Incoming cookies:', req.cookies)
+
   console.log('Session ID:', req.sessionID)
   next()
 })
  
-// ✅ Auth Login
+app.get('/api/check',(request,response)=>{
+      return response.status(401).send({ message: "hi", cookies:request.cookies })
+})
+//  Auth Login
 app.post('/api/auth/login', (request, response, next) => {
   passport.authenticate('local', (error, user, info) => {
     if (error) return response.status(500).send({ msg: error.message })
@@ -123,6 +128,13 @@ app.post('/api/auth/login', (request, response, next) => {
 
     request.login(user, (error) => {
       if (error) return response.status(500).send({ msg: error.message })
+//         response.cookie('token', {
+//   httpOnly: true,
+//   secure: process.env.NODE_ENV === "production", 
+//   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+//   maxAge: 24 * 60 * 60 * 1000 ,
+//   path:"/",
+// })
       return response.status(201).send({ msg: "Login successful", user })
     })
   })(request, response, next)
@@ -168,6 +180,6 @@ const PORT = process.env.PORT || 5000;
 console.log(PORT)
 const startServer = async () => {
   await connectDB()
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}, ${process.env.SESSION_SECRET}`))
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
 }
 startServer()
